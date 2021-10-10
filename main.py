@@ -29,13 +29,16 @@ def set_cmd_parser() -> argparse.ArgumentParser:
     MSG_HELP: str = f'''{COLOR.RED}REQUIRED FOR ENCODING:{COLOR.RESET} message to be encoded.
         E.g, for encoding {COLOR.GREEN}$ python main.py encode "img.jpg" {COLOR.PURPLE}-msg "hidden"{COLOR.RESET}'''
     FILENAME_HELP: str = f'''{COLOR.YELLOW}OPTIONAL FOR ENCODING:{COLOR.RESET} filename of the encoded image.
-        E.g, for encoding {COLOR.GREEN}$ python main.py encode "img.png" -m "hidden" {COLOR.PURPLE}-filename "new_image"{COLOR.RESET}\n'''
+        E.g, for encoding {COLOR.GREEN}$ python main.py encode "img.png" -m "hidden" {COLOR.PURPLE}-filename "new_image"{COLOR.RESET}'''
+    TEXTFILE_HELP: str = f'''{COLOR.YELLOW}OPTIONAL FOR DECODING:{COLOR.RESET} creates a text file that contains the decoded text.
+        E.g, for decoding {COLOR.GREEN}$ python main.py decode "img.png" {COLOR.PURPLE}--textfile{COLOR.RESET}'''
 
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=IMPORTANT_NOTICE, prog='Image Steganography', usage=USAGE, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("command", type=str, help=COMMAND_HELP)
     parser.add_argument("image_path", type=str, help=IMAGE_PATH_HELP)
     parser.add_argument("-msg", type=str, help=MSG_HELP)
     parser.add_argument("-filename", type=str, default="", help=FILENAME_HELP)
+    parser.add_argument("--textfile", action="store_true", help=TEXTFILE_HELP)
     return parser
 
 
@@ -62,6 +65,7 @@ def main() -> None:
     IMAGE_PATH: str = PARSER_RESULTS.image_path
     MESSAGE: str = PARSER_RESULTS.msg
     FILENAME: str = PARSER_RESULTS.filename
+    TEXTFILE: bool = PARSER_RESULTS.textfile
 
     # Check the cmd arguments and exit with a message if there are any invalid/missing arguments or 
     # internal errors. Otherwise, continue executing the function
@@ -87,8 +91,8 @@ def main() -> None:
 
         try:
             image_dict: dict = image_to_pixels(IMAGE_PATH)
-            decoded_text: str = decode_image(image_dict)
-            print(f"\n{COLOR.GREEN}Image decoded successfully. Hidden text: {decoded_text}{COLOR.RESET}\n")
+            decoding_results: str = decode_image(image_dict, TEXTFILE)
+            print(f"\n{COLOR.GREEN}Image decoded successfully. {decoding_results}{COLOR.RESET}\n")
 
         except BaseException:
             internal_error()

@@ -1,3 +1,4 @@
+from io import TextIOWrapper
 from PIL.JpegImagePlugin import JpegImageFile
 from PIL import PyAccess
 from binary_conversions import convert
@@ -56,7 +57,7 @@ def encode_image(image_dict: dict, message: str, given_filename: str) -> JpegIma
 
 # Decode the image by extracting the 8-bit binary numbers based on the pixel's value parity
 # Returns the decoded text
-def decode_image(image_dict: dict) -> str:
+def decode_image(image_dict: dict, textfile: bool) -> str:
     
     # Initialize constants
     COUNTER_LIMIT: int = 8
@@ -96,7 +97,15 @@ def decode_image(image_dict: dict) -> str:
             continue
         break
 
-    # Convert the _8bit_binary_stream to a char string and return it
+    # Convert the _8bit_binary_stream to a char string and return it in the specified form
     decoded_text: str = convert("8-bit binary", "string", _8bit_binary_stream)
-    return decoded_text
+
+    if textfile:
+        new_textfile: TextIOWrapper = open("text_DECODED.txt", "w")
+        new_textfile.write(decoded_text)
+        return f"Decoded text file saved to text_DECODED.txt"
+
+    else:
+        return f"Hidden text: {decoded_text}"
+
 
