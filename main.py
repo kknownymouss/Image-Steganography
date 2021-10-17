@@ -1,6 +1,6 @@
 import argparse
 import sys
-from encode_decode import decode_image, encode_image
+from encode_decode import decode_text_from_image, encode_text_into_image
 from image_conversions import image_to_pixels
 
 
@@ -79,7 +79,7 @@ def main() -> None:
 
         try:
             image_dict: dict = image_to_pixels(IMAGE_PATH)
-            filename: str = encode_image(image_dict, MESSAGE + "~", FILENAME)
+            filename: str = encode_text_into_image(image_dict, MESSAGE + "~", FILENAME)
             print(f"\n{COLOR.GREEN}Image encoded successfully. Saved to {filename}{COLOR.RESET}\n")
 
         except BaseException:
@@ -91,7 +91,7 @@ def main() -> None:
 
         try:
             image_dict: dict = image_to_pixels(IMAGE_PATH)
-            decoding_results: str = decode_image(image_dict, TEXTFILE)
+            decoding_results: str = decode_text_from_image(image_dict, TEXTFILE)
             print(f"\n{COLOR.GREEN}Image decoded successfully. {decoding_results}{COLOR.RESET}\n")
 
         except BaseException:
