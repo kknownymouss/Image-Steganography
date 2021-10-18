@@ -16,12 +16,12 @@ def image_to_pixels(image_path: str) -> dict:
 
 
 # If there is no given filename, generates a random image name and saves it to local directory
-def save_image(image, given_filename: str) -> str:
+def save_image(image, given_filename: str, command: str) -> str:
     if given_filename:
-        filename: str = f"{given_filename}_ENCODED.png" 
+        filename: str = f"{given_filename}_{command}.png" 
     else:
         random_name: function = lambda letters: "".join(choices(letters, k=6))
-        filename: str = f"{random_name(ascii_letters)}_ENCODED.png" 
+        filename: str = f"{random_name(ascii_letters)}_{command}.png" 
 
     image.save(filename)
     return filename

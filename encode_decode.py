@@ -50,7 +50,7 @@ def encode_text_into_image(image_dict: dict, message: str, given_filename: str) 
         break
     
     # Get filename from save_image() and return it
-    filename: str = save_image(original_image, given_filename)
+    filename: str = save_image(original_image, given_filename, "ENCODED")
     return filename
 
 
@@ -137,7 +137,7 @@ def encode_image_into_image(image1_dict: dict, image2_dict: dict, given_filename
             original_image_pixel_access[i, j] = merge_rgb(original_image_rgb_tuple, encoded_image_rgb_tuple)
 
     # Get filename from save_image() and return it
-    filename: str = save_image(original_image, given_filename)
+    filename: str = save_image(original_image, given_filename, "ENCODED")
     return filename
 
     
@@ -166,5 +166,5 @@ def decode_image_from_image(image_dict: dict, given_filename: str) -> str:
 
 
     result_image: Image.Image = result_image.crop((0, 0, crop_dimensions[0], crop_dimensions[1]))
-    filename: str = save_image(result_image, given_filename)
+    filename: str = save_image(result_image, given_filename, 'DECODED')
     return filename
