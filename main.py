@@ -2,6 +2,7 @@ import argparse
 import sys
 from encode_decode import decode_image_from_image, decode_text_from_image, encode_image_into_image, encode_text_into_image
 from image_conversions import image_to_pixels
+import string, random, base64
 
 
 # ANSI escape sequence for terminal colors
@@ -12,6 +13,16 @@ class COLOR:
     YELLOW: str = '\033[93m'
     PURPLE: str = '\033[95m'
 
+
+
+# A random key generator for encryption
+def generate_key() -> str:
+    chars: str = string.ascii_letters + string.digits
+    random_chars: str = "".join(random.choices(chars, k=10))
+    return str(base64.b64encode(bytes(random_chars, "utf-8")), "utf-8")
+
+# This is used for the default argument for encrypt where a random key is chosen
+CONSTANT_ENCRYPTION_ARGUMENT: str = generate_key()
 
 # Sets the command-line interface
 def set_cmd_parser() -> argparse.ArgumentParser:
@@ -39,6 +50,11 @@ def set_cmd_parser() -> argparse.ArgumentParser:
         E.g, for decoding {COLOR.GREEN}$ python main.py decode "img.png" --image {COLOR.PURPLE}-filename "new_image"{COLOR.RESET}'''
     TEXTFILE_HELP: str = f'''{COLOR.YELLOW}OPTIONAL FOR DECODING TEXT FROM IMAGE:{COLOR.RESET} creates a text file that contains the decoded text.
         E.g, for decoding {COLOR.GREEN}$ python main.py decode "img.png" --text {COLOR.PURPLE}--textfile{COLOR.RESET}'''
+    DECRYPT_HELP: str = f'''{COLOR.YELLOW}OPTIONAL FOR DECODING TEXT FROM IMAGE:{COLOR.RESET} The decryption key if the hidden message was encrypted.
+        E.g, for decoding {COLOR.GREEN}$ python main.py decode "img.png" --text {COLOR.PURPLE}-decrypt "decryption_key"{COLOR.RESET}'''
+    ENCRYPT_HELP: str = f'''{COLOR.YELLOW}OPTIONAL FOR ENCODING TEXT IN IMAGE:{COLOR.RESET} The encryption key. If no key is specified, a random key will be chosen.
+        E.g, for encoding with custom encryption key{COLOR.GREEN} $ python main.py encode "img.png" -msg "random message" {COLOR.PURPLE}-encrypt "encryption_key"{COLOR.RESET}
+        E.g, for encoding with random encryption key{COLOR.GREEN} $ python main.py encode "img.png" -msg "random message" {COLOR.PURPLE}-encrypt{COLOR.RESET}'''
 
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description=IMPORTANT_NOTICE, prog='Image Steganography', usage=USAGE, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("command", type=str, help=COMMAND_HELP)
@@ -49,6 +65,8 @@ def set_cmd_parser() -> argparse.ArgumentParser:
     parser.add_argument("--text", action="store_true", help=TEXT_HELP)
     parser.add_argument("--textfile", action="store_true", help=TEXTFILE_HELP)
     parser.add_argument("-filename", type=str, default="", help=FILENAME_HELP)
+    parser.add_argument("-encrypt", nargs="?", type=str, default="", const=CONSTANT_ENCRYPTION_ARGUMENT, help=ENCRYPT_HELP)
+    parser.add_argument("-decrypt", type=str, default="", help=DECRYPT_HELP)
     return parser
 
 
@@ -79,6 +97,8 @@ def main() -> None:
     TEXTFILE: bool = PARSER_RESULTS.textfile
     TEXT: bool = PARSER_RESULTS.text
     IMAGE: bool = PARSER_RESULTS.image
+    ENCRYPT: str = PARSER_RESULTS.encrypt
+    DECRYPT: str = PARSER_RESULTS.decrypt
 
     # Check the cmd arguments and exit with a message if there are any invalid/missing arguments or 
     # internal errors. Otherwise, continue executing the function
@@ -93,8 +113,21 @@ def main() -> None:
         try:
             if MSG:
                 image_dict: dict = image_to_pixels(IMAGE_PATH)
-                filename: str = encode_text_into_image(image_dict, MSG + "~", FILENAME)
-                print(f"\n{COLOR.GREEN}Image encoded successfully. Saved to {filename}{COLOR.RESET}\n")
+
+                # Check if encrypt argument is there and then check if its the constant argument (for random key generation) or a user custom key.
+                if ENCRYPT:
+                    if ENCRYPT == CONSTANT_ENCRYPTION_ARGUMENT: # constant argument (random encryption key)
+                        key: str = generate_key()
+                    
+                    else: # custom encryption key
+                        key: str = ENCRYPT
+                        
+                    filename: str = encode_text_into_image(image_dict, MSG, FILENAME, key)
+                    print(f"\n{COLOR.GREEN}Image encoded successfully. Saved to {filename}\nEncryption/Decryption Key: {key}{COLOR.RESET}\n")
+                else:
+                    key: str = ""
+                    filename: str = encode_text_into_image(image_dict, MSG + "~", FILENAME, key)
+                    print(f"\n{COLOR.GREEN}Image encoded successfully. Saved to {filename}{COLOR.RESET}\n")
             elif IMG:
                 image1_dict: dict = image_to_pixels(IMAGE_PATH)
                 image2_dict: dict = image_to_pixels(IMG)
@@ -114,8 +147,12 @@ def main() -> None:
         try:
             if TEXT:
                 image_dict: dict = image_to_pixels(IMAGE_PATH)
-                decoding_results: str = decode_text_from_image(image_dict, TEXTFILE)
-                print(f"\n{COLOR.GREEN}Image decoded successfully. {decoding_results}{COLOR.RESET}\n")
+
+                # If decrypt argument is there, set key to its value, otherwise key and value will be ""
+                key: str = DECRYPT
+
+                decoding_results: str = decode_text_from_image(image_dict, TEXTFILE, key)
+                print(f"\n{COLOR.GREEN}Image decoded successfully.\n{decoding_results}{COLOR.RESET}\n")
             elif IMAGE:
                 image_dict: dict = image_to_pixels(IMAGE_PATH)
                 decoding_results: str = decode_image_from_image(image_dict, FILENAME)
